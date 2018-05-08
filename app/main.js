@@ -100,6 +100,7 @@ function setup() {
   });
   renderer.setSize( W, H );
   renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setClearColor( 0xFFFFFF );
   document.body.appendChild( renderer.domElement );
 
   scene = new THREE.Scene();

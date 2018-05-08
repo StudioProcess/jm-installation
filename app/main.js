@@ -49,6 +49,7 @@ function meshgeo(r=0.01) {
   let nx = Math.ceil( (2+r) / w );
   let ny = Math.ceil( 2 / h );
   let pos = [];
+  let uv = [];
   
   // console.log(nx, ny);
   
@@ -57,13 +58,18 @@ function meshgeo(r=0.01) {
       let flip = (i+j) % 2;
       let ox = w * i + flip * r - 1; // flipped tris are offset by r to the right
       let oy = h * j - 1;
+      
       let tri = equitri([ox,oy], r, flip);
       pos = pos.concat( tri );
+      
+      let c = [1-(ox+1)/2, (oy+1)/2]; // uv coordinates based on triangle center
+      uv = uv.concat(c, c, c); // add 3x (for each triangle vertex)
     }
   }
   
   let geo = new THREE.BufferGeometry();
   geo.addAttribute( 'position', new THREE.BufferAttribute(new Float32Array(pos), 3) );
+  geo.addAttribute( 'uv', new THREE.BufferAttribute(new Float32Array(uv), 2) );
   return geo;
 }
 
@@ -108,13 +114,6 @@ function setup() {
   // let geo = new THREE.BufferGeometry();
   // geo.addAttribute( 'position', new THREE.BufferAttribute(v, 2) );
   
-  let geo = meshgeo(0.02);
-  
-  let mat = new THREE.MeshBasicMaterial({ color: 0x1e90ff, wireframe: true });
-  let mesh = new THREE.Mesh( geo, mat );
-  
-  scene.add( mesh );
-  
   // Setup webcam texture
   let videoElement = startWebcam(true);
   texture = new THREE.VideoTexture(videoElement);
@@ -122,11 +121,18 @@ function setup() {
   texture.magFilter = THREE.LinearFilter;
   texture.format = THREE.RGBFormat;
   
+  let geo = meshgeo(0.02);
+  let mat = new THREE.MeshBasicMaterial({ color:0x1e90ff, wireframe:false, map:texture });
+  let mesh = new THREE.Mesh( geo, mat );
+  scene.add( mesh );
+  
   var geometry = new THREE.PlaneBufferGeometry( 2, 2*9/16, 1 );
   var material = new THREE.MeshBasicMaterial({ map:texture });
   var plane = new THREE.Mesh( geometry, material );
   plane.position.z = -0.1;
   scene.add( plane );
+  
+  
   
 }
 

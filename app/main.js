@@ -1,9 +1,18 @@
 const W = 1280;
 const H = 800;
 
+const caps = {
+  video: {
+    width: 320,
+    height: 180,
+  }
+};
+
+const sqrt3 = Math.sqrt(3);
+
 let renderer, scene, camera;
 let controls; // eslint-disable-line no-unused-vars
-const sqrt3 = Math.sqrt(3);
+let texture;
 
 (function main() {  
   
@@ -59,6 +68,22 @@ function meshgeo(r=0.01) {
 }
 
 
+function startWebcam(append = false) {
+  let videoElement = document.createElement('video');
+  videoElement.autoplay = true;
+  if (append) { document.body.appendChild(videoElement); }
+  
+  navigator.mediaDevices.getUserMedia(caps).then(stream => {
+    // console.log(stream);
+    videoElement.srcObject = stream;
+    let settings = stream.getVideoTracks()[0].getSettings();
+    console.log(settings);
+  }).catch(err => {
+    console.error('Error obtaining Webcam:', err);
+  });
+  
+  return videoElement;
+}
 
 
 function setup() {
@@ -76,7 +101,6 @@ function setup() {
   controls = new THREE.OrbitControls( camera, renderer.domElement );
   camera.position.z = 2;
   
-
   
   // let v1 = equitri( [-2,0], 1, false );
   // let v2 = equitri( [2, 0], 1, true  );
@@ -90,6 +114,19 @@ function setup() {
   let mesh = new THREE.Mesh( geo, mat );
   
   scene.add( mesh );
+  
+  // Setup webcam texture
+  let videoElement = startWebcam(true);
+  texture = new THREE.VideoTexture(videoElement);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.format = THREE.RGBFormat;
+  
+  var geometry = new THREE.PlaneBufferGeometry( 2, 2*9/16, 1 );
+  var material = new THREE.MeshBasicMaterial({ map:texture });
+  var plane = new THREE.Mesh( geometry, material );
+  plane.position.z = -0.1;
+  scene.add( plane );
   
 }
 

@@ -15,3 +15,13 @@ canvas {
   width: 100% !important;
   height: auto !important;
 }
+
+video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5vw;
+  height: auto;
+  transform-origin: middle;
+  transform: scale(-1, 1);
+}

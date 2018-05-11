@@ -114,7 +114,7 @@ function setup() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 75, W / H, 0.01, 1000 );
-  controls = new THREE.OrbitControls( camera, renderer.domElement );
+  // controls = new THREE.OrbitControls( camera, renderer.domElement );
   camera.position.z = 1.26;
 
 

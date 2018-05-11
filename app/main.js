@@ -28,24 +28,29 @@ let texture;
 //   offset: position of geometric center
 //   r: radius of inner circle
 //   flip: flip horizontally?
-function equitri(offset=[0,0], r=1, flip=false) {
+function equitri(offset=[0,0], rx=1, ry=1, flip=false) {
   let f = flip ? -1 : 1;
   return [
-    offset[0] + f*2*r, offset[1] + 0,           0,
-    offset[0] -   f*r, offset[1] + f*3*r/sqrt3, 0,
-    offset[0] -   f*r, offset[1] - f*3*r/sqrt3, 0,
+    offset[0] + f*2*rx, offset[1] + 0,           0,
+    offset[0] -   f*rx, offset[1] + f*3*ry/sqrt3, 0,
+    offset[0] -   f*rx, offset[1] - f*3*ry/sqrt3, 0,
   ];
 }
 
-// Geometry for a triangle mesh covering the whole screen
+// Geometry for a triangle mesh covering the whole screen (i.e. [-1, 1])
 // Contains position and uv attributes
 // r: radius of inner circle
 function meshgeo(r=0.01) {
   // let dx = 4 * r;
   // let dy = 3 * r / sqrt3; // = a/2
-  let w = 3 * r;
-  let h = 3 * r / sqrt3; // = a/2
+  
+  let aspect = W/H;
+  
+  let w = 3 * r / aspect; // Outer width of a triangle
+  let h = 3 * r / sqrt3; // = a/2  // Outer height of a triangle
+  
 
+  
   let nx = Math.ceil( (2+r) / w );
   let ny = Math.ceil( 2 / h );
   let pos = [];
@@ -56,10 +61,10 @@ function meshgeo(r=0.01) {
   for (let j=0; j<ny; j++) {
     for (let i=0; i<nx; i++) {
       let flip = (i+j) % 2;
-      let ox = w * i + flip * r - 1; // flipped tris are offset by r to the right
+      let ox = w * i + flip * r/aspect - 1; // flipped tris are offset by r to the right
       let oy = h * j - 1;
 
-      let tri = equitri([ox,oy], r, flip);
+      let tri = equitri([ox,oy], r/aspect, r, flip);
       pos = pos.concat( tri );
 
       let c = [1-(ox+1)/2, (oy+1)/2]; // uv coordinates based on triangle center
@@ -106,7 +111,7 @@ function setup() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 75, W / H, 0.01, 1000 );
   controls = new THREE.OrbitControls( camera, renderer.domElement );
-  camera.position.z = 2;
+  camera.position.z = 1.26;
 
 
   // let v1 = equitri( [-2,0], 1, false );
@@ -129,16 +134,15 @@ function setup() {
     map:texture
   });
   let mesh = new THREE.Mesh( geo, mat );
+  mesh.scale.x = W/H;
   scene.add( mesh );
 
-  var geometry = new THREE.PlaneBufferGeometry( 2, 2*9/16, 1 );
-  var material = new THREE.MeshBasicMaterial({ map:texture });
-  var plane = new THREE.Mesh( geometry, material );
-  plane.position.z = -0.1;
-  scene.add( plane );
-
-
-
+  // // Test quad with video texture
+  // var geometry = new THREE.PlaneBufferGeometry( 2, 2*9/16, 1 );
+  // var material = new THREE.MeshBasicMaterial({ map:texture });
+  // var plane = new THREE.Mesh( geometry, material );
+  // plane.position.z = -0.1;
+  // scene.add( plane );
 }
 
 

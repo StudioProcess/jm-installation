@@ -6,10 +6,12 @@ const W = 1280;
 const H = 720;
 const CAPTURE_RATIO = 0.25; // For capture resolution
 const MODIFIED_HOTKEYS = true;
-const MESH_COUNT = 80;
+const MESH_COUNT_IDX_DEFAULT = 3;
 
 // JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
-const COLORS = [ 0xFFFFFF, 0x1424fa, 0xfc4d40, 0x251e21 ];
+const COLORS = [ 0xFFFFFF, 0x1424fa, 0xfc4d40 ];
+const MESH_COUNTS = [ 32, 48, 64, 80, 96, 112, 128, 160 ];
+
 
 const caps = { // Camera Capabilities
   video: {
@@ -20,7 +22,7 @@ const caps = { // Camera Capabilities
 
 const SQRT3 = Math.sqrt(3);
 
-let meshCount = MESH_COUNT; // ~ 10-200
+let meshCount = MESH_COUNTS[MESH_COUNT_IDX_DEFAULT]; // ~ 10-200
 
 let renderer, scene, camera;
 let controls; // eslint-disable-line no-unused-vars
@@ -158,7 +160,19 @@ function updateMeshCount(newMeshCount) {
   mesh.geometry = meshgeo(2/meshCount);
 }
 
-// function setSize(idx) {}
+
+function setMeshCount(idx) {
+  updateMeshCount( MESH_COUNTS[idx] );
+}
+
+let meshCountIdx = MESH_COUNT_IDX_DEFAULT;
+function nextMeshCount(offset = 1) {
+  meshCountIdx += offset;
+  meshCountIdx %= MESH_COUNTS.length;
+  if (meshCountIdx < 0) { meshCountIdx += MESH_COUNTS.length; }
+  setMeshCount(meshCountIdx);
+}
+
 
 function setColor(idx) { 
   mesh.material.color = new THREE.Color( COLORS[idx] );
@@ -214,18 +228,21 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
   }
   
-  else if (e.code == 'Digit1') { updateMeshCount(32); }
-  else if (e.code == 'Digit2') { updateMeshCount(48); }
-  else if (e.code == 'Digit3') { updateMeshCount(64); }
-  else if (e.code == 'Digit4') { updateMeshCount(80); }
-  else if (e.code == 'Digit5') { updateMeshCount(96); }
-  else if (e.code == 'Digit6') { updateMeshCount(112); }
-  else if (e.code == 'Digit7') { updateMeshCount(128); }
-  else if (e.code == 'Digit8') { updateMeshCount(160); }
-  else if (e.code == 'Digit0') { updateMeshCount(MESH_COUNT); }
+  else if (e.code == 'Digit1') { setMeshCount(0); }
+  else if (e.code == 'Digit2') { setMeshCount(1); }
+  else if (e.code == 'Digit3') { setMeshCount(2); }
+  else if (e.code == 'Digit4') { setMeshCount(3); }
+  else if (e.code == 'Digit5') { setMeshCount(4); }
+  else if (e.code == 'Digit6') { setMeshCount(5); }
+  else if (e.code == 'Digit7') { setMeshCount(6); }
+  else if (e.code == 'Digit8') { setMeshCount(7); }
+  else if (e.code == 'Digit0') { setMeshCount(MESH_COUNT_IDX_DEFAULT); }
   
   else if (e.code == 'ArrowRight') { nextColor(); }
-  else if (e.code == 'ArrowLeft') { nextColor(-1); }
+  else if (e.code == 'ArrowLeft')  { nextColor(-1); }
+  
+  else if (e.code == 'ArrowUp')   { nextMeshCount(); }
+  else if (e.code == 'ArrowDown') { nextMeshCount(-1); }
   
   if (e.code.startsWith('Digit') || e.code.startsWith('Arrow')) { e.preventDefault(); }
   

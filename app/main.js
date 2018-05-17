@@ -3,12 +3,14 @@ import '../node_modules/three/examples/js/controls/OrbitControls.js';
 
 
 const W = 1280;
-const H = 800;
+const H = 720;
+const ratio = 0.25; // For camera resolution
 
-const caps = {
+
+const caps = { // Camera Capabilities
   video: {
-    width: 320,
-    height: 180,
+    width: W*ratio,
+    height: H*ratio,
   }
 };
 

@@ -5,12 +5,12 @@ import '../node_modules/three/examples/js/controls/OrbitControls.js';
 const W = 1280;
 const H = 720;
 const CAPTURE_RATIO = 0.25; // For capture resolution
-const MODIFIED_HOTKEYS = true;
+const MODIFIED_HOTKEYS = false;
 const MESH_COUNT_IDX_DEFAULT = 3;
 
 // JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
 const COLORS = [ 0xFFFFFF, 0x1424fa, 0xfc4d40 ];
-const MESH_COUNTS = [ 32, 48, 64, 80, 96, 112, 128, 160 ];
+const MESH_COUNTS = [ 32, 48, 64, 80, 96, 112, 128 ];
 
 
 const caps = { // Camera Capabilities
@@ -211,6 +211,12 @@ function modifiedKey(e) {
 }
 
 
+function reset() {
+  setMeshCount(MESH_COUNT_IDX_DEFAULT); 
+  setColor(0);
+}
+
+
 document.addEventListener('keydown', e => {
   // console.log(e.key, e.keyCode, e);
   
@@ -235,7 +241,6 @@ document.addEventListener('keydown', e => {
   else if (e.code == 'Digit5') { setMeshCount(4); }
   else if (e.code == 'Digit6') { setMeshCount(5); }
   else if (e.code == 'Digit7') { setMeshCount(6); }
-  else if (e.code == 'Digit8') { setMeshCount(7); }
   else if (e.code == 'Digit0') { setMeshCount(MESH_COUNT_IDX_DEFAULT); }
   
   else if (e.code == 'ArrowRight') { nextColor(); }
@@ -243,6 +248,9 @@ document.addEventListener('keydown', e => {
   
   else if (e.code == 'ArrowUp')   { nextMeshCount(); }
   else if (e.code == 'ArrowDown') { nextMeshCount(-1); }
+  
+  else if (e.code == 'Backspace') { reset(); e.preventDefault(); }
+  
   
   if (e.code.startsWith('Digit') || e.code.startsWith('Arrow')) { e.preventDefault(); }
   

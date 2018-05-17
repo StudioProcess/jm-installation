@@ -8,6 +8,9 @@ const CAPTURE_RATIO = 0.25; // For capture resolution
 const MODIFIED_HOTKEYS = true;
 const MESH_COUNT = 80;
 
+// JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
+const COLORS = [ 0xFFFFFF, 0x1424fa, 0xfc4d40, 0x251e21 ];
+
 const caps = { // Camera Capabilities
   video: {
     width: W * CAPTURE_RATIO,
@@ -134,7 +137,7 @@ function setup() {
 
   let geo = meshgeo(2/meshCount);
   let mat = new THREE.MeshBasicMaterial({
-    color: 0xFFFFFF, // JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
+    color: COLORS[0],
     map: texture
   });
   mesh = new THREE.Mesh( geo, mat );
@@ -153,6 +156,20 @@ function setup() {
 function updateMeshCount(newMeshCount) {
   if (newMeshCount !== undefined) { meshCount = newMeshCount; }
   mesh.geometry = meshgeo(2/meshCount);
+}
+
+// function setSize(idx) {}
+
+function setColor(idx) { 
+  mesh.material.color = new THREE.Color( COLORS[idx] );
+}
+
+let colorIdx = 0;
+function nextColor(offset = 1) {
+  colorIdx += offset;
+  colorIdx %= COLORS.length;
+  if (colorIdx < 0) { colorIdx += COLORS.length; }
+  setColor(colorIdx);
 }
 
 
@@ -207,6 +224,9 @@ document.addEventListener('keydown', e => {
   else if (e.code == 'Digit8') { updateMeshCount(160); }
   else if (e.code == 'Digit0') { updateMeshCount(MESH_COUNT); }
   
-  if (e.code.startsWith('Digit')) { e.preventDefault(); }
+  else if (e.code == 'ArrowRight') { nextColor(); }
+  else if (e.code == 'ArrowLeft') { nextColor(-1); }
+  
+  if (e.code.startsWith('Digit') || e.code.startsWith('Arrow')) { e.preventDefault(); }
   
 });

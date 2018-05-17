@@ -127,7 +127,7 @@ function setup() {
   // geo.addAttribute( 'position', new THREE.BufferAttribute(v, 2) );
 
   // Setup webcam texture
-  let videoElement = startWebcam(true);
+  let videoElement = startWebcam();
   texture = new THREE.VideoTexture(videoElement);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;

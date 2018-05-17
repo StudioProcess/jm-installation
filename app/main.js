@@ -12,7 +12,7 @@ const caps = {
   }
 };
 
-const sqrt3 = Math.sqrt(3);
+const SQRT3 = Math.sqrt(3);
 
 let renderer, scene, camera;
 let controls; // eslint-disable-line no-unused-vars
@@ -36,8 +36,8 @@ function equitri(offset=[0,0], rx=1, ry=1, flip=false) {
   let f = flip ? -1 : 1;
   return [
     offset[0] + f*2*rx, offset[1] + 0,           0,
-    offset[0] -   f*rx, offset[1] + f*3*ry/sqrt3, 0,
-    offset[0] -   f*rx, offset[1] - f*3*ry/sqrt3, 0,
+    offset[0] -   f*rx, offset[1] + f*3*ry/SQRT3, 0,
+    offset[0] -   f*rx, offset[1] - f*3*ry/SQRT3, 0,
   ];
 }
 
@@ -46,12 +46,12 @@ function equitri(offset=[0,0], rx=1, ry=1, flip=false) {
 // r: radius of inner circle
 function meshgeo(r=0.01) {
   // let dx = 4 * r;
-  // let dy = 3 * r / sqrt3; // = a/2
+  // let dy = 3 * r / SQRT3; // = a/2
   
   let aspect = W/H;
   
   let w = 3 * r / aspect; // Outer width of a triangle
-  let h = 3 * r / sqrt3; // = a/2  // Outer height of a triangle
+  let h = 3 * r / SQRT3; // = a/2  // Outer height of a triangle
   
 
   

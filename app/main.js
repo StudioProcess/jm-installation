@@ -6,7 +6,7 @@ const W = 1280;
 const H = 720;
 const CAPTURE_RATIO = 0.25; // For capture resolution
 const MODIFIED_HOTKEYS = true;
-
+const MESH_COUNT = 80;
 
 const caps = { // Camera Capabilities
   video: {
@@ -17,9 +17,11 @@ const caps = { // Camera Capabilities
 
 const SQRT3 = Math.sqrt(3);
 
+let meshCount = MESH_COUNT; // ~ 10-200
+
 let renderer, scene, camera;
 let controls; // eslint-disable-line no-unused-vars
-let texture;
+let mesh, texture;
 
 (function main() {
 
@@ -135,13 +137,12 @@ function setup() {
   texture.magFilter = THREE.LinearFilter;
   texture.format = THREE.RGBFormat;
 
-  let geo = meshgeo(0.02);
+  let geo = meshgeo(2/meshCount);
   let mat = new THREE.MeshBasicMaterial({
     color: 0xFFFFFF, // JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
-    wireframe:false,
-    map:texture
+    map: texture
   });
-  let mesh = new THREE.Mesh( geo, mat );
+  mesh = new THREE.Mesh( geo, mat );
   mesh.scale.x = W/H;
   scene.add( mesh );
 
@@ -151,6 +152,11 @@ function setup() {
   // var plane = new THREE.Mesh( geometry, material );
   // plane.position.z = -0.1;
   // scene.add( plane );
+}
+
+function updateMeshCount(newMeshCount) {
+  if (newMeshCount !== undefined) { meshCount = newMeshCount; }
+  mesh.geometry = meshgeo(2/meshCount);
 }
 
 
@@ -194,5 +200,17 @@ document.addEventListener('keydown', e => {
     saveCanvas();
     e.preventDefault();
   }
-
+  
+  else if (e.code == 'Digit1') { updateMeshCount(32); }
+  else if (e.code == 'Digit2') { updateMeshCount(48); }
+  else if (e.code == 'Digit3') { updateMeshCount(64); }
+  else if (e.code == 'Digit4') { updateMeshCount(80); }
+  else if (e.code == 'Digit5') { updateMeshCount(96); }
+  else if (e.code == 'Digit6') { updateMeshCount(112); }
+  else if (e.code == 'Digit7') { updateMeshCount(128); }
+  else if (e.code == 'Digit8') { updateMeshCount(160); }
+  else if (e.code == 'Digit0') { updateMeshCount(MESH_COUNT); }
+  
+  if (e.code.startsWith('Digit')) { e.preventDefault(); }
+  
 });

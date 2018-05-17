@@ -33,7 +33,7 @@ let mesh, texture;
 
 
 // Generate coordiantes for an equilateral triangle
-// Format: [x0, y0, 0, x1, y1, 0, x2, y2, 0]
+// Format: [x0,y0,0, x1,y1,0,  x2,y2,0]
 //   offset: position of geometric center
 //   r: radius of inner circle
 //   flip: flip horizontally?
@@ -50,28 +50,29 @@ function equitri(offset=[0,0], rx=1, ry=1, flip=false) {
 // Contains position and uv attributes
 // r: radius of inner circle
 function meshgeo(r=0.01) {
-  // let dx = 4 * r;
-  // let dy = 3 * r / SQRT3; // = a/2
-  
+  // Triangle Spacing
   let aspect = W/H;
-  
   let w = 3 * r / aspect; // Outer width of a triangle
-  let h = 3 * r / SQRT3; // = a/2  // Outer height of a triangle
+  let h = 3 * r / SQRT3;  // = a/2  // Half Outer height of a triangle
   
-
-  
+  // Number of triangles to generate
   let nx = Math.ceil( (2+r) / w );
-  let ny = Math.ceil( 2 / h );
+  let ny = Math.ceil( 2 / h + 1);
+  
+  // Offset for centering 
+  let cx = -1 + (w*nx - 2) / -2 + r/2; 
+  let cy = -1 + (h*(ny-1) - 2) / -2;
+
   let pos = [];
   let uv = [];
 
-  // console.log(nx, ny);
+  console.log(nx, ny, r);
 
   for (let j=0; j<ny; j++) {
     for (let i=0; i<nx; i++) {
       let flip = (i+j) % 2;
-      let ox = w * i + flip * r/aspect - 1; // flipped tris are offset by r to the right
-      let oy = h * j - 1;
+      let ox = w * i + (flip * r/aspect) + cx; // flipped tris are offset by r to the right
+      let oy = h * j + cy;
 
       let tri = equitri([ox,oy], r/aspect, r, flip);
       pos = pos.concat( tri );
@@ -119,16 +120,10 @@ function setup() {
   document.body.appendChild( renderer.domElement );
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera( 75, W / H, 0.01, 1000 );
-  // controls = new THREE.OrbitControls( camera, renderer.domElement );
+  // camera = new THREE.PerspectiveCamera( 75, W / H, 0.01, 1000 );
+  camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000 );
   camera.position.z = 1.26;
-
-
-  // let v1 = equitri( [-2,0], 1, false );
-  // let v2 = equitri( [2, 0], 1, true  );
-  // let v = new Float32Array( v1.concat(v2) );
-  // let geo = new THREE.BufferGeometry();
-  // geo.addAttribute( 'position', new THREE.BufferAttribute(v, 2) );
+  // controls = new THREE.OrbitControls( camera, renderer.domElement );
 
   // Setup webcam texture
   let videoElement = startWebcam();
@@ -143,7 +138,8 @@ function setup() {
     map: texture
   });
   mesh = new THREE.Mesh( geo, mat );
-  mesh.scale.x = W/H;
+  // mesh.scale.x = W/H; // only needed for perspective camera
+  window.mesh = mesh;
   scene.add( mesh );
 
   // // Test quad with video texture

@@ -46259,8 +46259,10 @@
 		LensFlare: LensFlare
 	});
 
+	// Load three.js as a module but also put it into global scope
+
 	// window.THREE = THREE; // Causes: OrbitControls.js:16 Uncaught TypeError: Cannot add property OrbitControls, object is not extensible
-	window.THREE = Object.assign({}, THREE$1); // makes sure window.THREE is extensible
+	window.THREE = Object.assign({}, THREE$1); // Makes sure window.THREE is extensible
 
 	/**
 	 * @author qiao / https://github.com/qiao
@@ -47291,20 +47293,28 @@
 	} );
 
 	const W = 1280;
-	const H = 800;
+	const H = 720;
+	const CAPTURE_RATIO = 0.25; // For capture resolution
+	const MESH_COUNT_IDX_DEFAULT = 3;
 
-	const caps = {
+	// JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
+	const COLORS = [ 0xFFFFFF, 0x1424fa, 0xfc4d40 ];
+	const MESH_COUNTS = [ 32, 48, 64, 80, 96, 112, 128, 160 ];
+
+
+	const caps = { // Camera Capabilities
 	  video: {
-	    width: 320,
-	    height: 180,
+	    width: W * CAPTURE_RATIO,
+	    height: H * CAPTURE_RATIO,
 	  }
 	};
 
-	const sqrt3 = Math.sqrt(3);
+	const SQRT3 = Math.sqrt(3);
+
+	let meshCount = MESH_COUNTS[MESH_COUNT_IDX_DEFAULT]; // ~ 10-200
 
 	let renderer, scene, camera;
-	let controls; // eslint-disable-line no-unused-vars
-	let texture;
+	let mesh, texture;
 
 	(function main() {
 
@@ -47316,7 +47326,7 @@
 
 
 	// Generate coordiantes for an equilateral triangle
-	// Format: [x0, y0, 0, x1, y1, 0, x2, y2, 0]
+	// Format: [x0,y0,0, x1,y1,0,  x2,y2,0]
 	//   offset: position of geometric center
 	//   r: radius of inner circle
 	//   flip: flip horizontally?
@@ -47324,8 +47334,8 @@
 	  let f = flip ? -1 : 1;
 	  return [
 	    offset[0] + f*2*rx, offset[1] + 0,           0,
-	    offset[0] -   f*rx, offset[1] + f*3*ry/sqrt3, 0,
-	    offset[0] -   f*rx, offset[1] - f*3*ry/sqrt3, 0,
+	    offset[0] -   f*rx, offset[1] + f*3*ry/SQRT3, 0,
+	    offset[0] -   f*rx, offset[1] - f*3*ry/SQRT3, 0,
 	  ];
 	}
 
@@ -47333,28 +47343,29 @@
 	// Contains position and uv attributes
 	// r: radius of inner circle
 	function meshgeo(r=0.01) {
-	  // let dx = 4 * r;
-	  // let dy = 3 * r / sqrt3; // = a/2
-	  
+	  // Triangle Spacing
 	  let aspect = W/H;
-	  
 	  let w = 3 * r / aspect; // Outer width of a triangle
-	  let h = 3 * r / sqrt3; // = a/2  // Outer height of a triangle
+	  let h = 3 * r / SQRT3;  // = a/2  // Half Outer height of a triangle
 	  
-
-	  
+	  // Number of triangles to generate
 	  let nx = Math.ceil( (2+r) / w );
-	  let ny = Math.ceil( 2 / h );
+	  let ny = Math.ceil( 2 / h + 1);
+	  
+	  // Offset for centering 
+	  let cx = -1 + (w*nx - 2) / -2 + r/2; 
+	  let cy = -1 + (h*(ny-1) - 2) / -2;
+
 	  let pos = [];
 	  let uv = [];
 
-	  // console.log(nx, ny);
+	  console.log(nx, ny, r);
 
 	  for (let j=0; j<ny; j++) {
 	    for (let i=0; i<nx; i++) {
 	      let flip = (i+j) % 2;
-	      let ox = w * i + flip * r/aspect - 1; // flipped tris are offset by r to the right
-	      let oy = h * j - 1;
+	      let ox = w * i + (flip * r/aspect) + cx; // flipped tris are offset by r to the right
+	      let oy = h * j + cy;
 
 	      let tri = equitri([ox,oy], r/aspect, r, flip);
 	      pos = pos.concat( tri );
@@ -47393,7 +47404,8 @@
 
 	  renderer = new THREE.WebGLRenderer({
 	    antialias: true,
-	    alpha: true
+	    alpha: true,
+	    preserveDrawingBuffer: true
 	  });
 	  renderer.setSize( W, H );
 	  renderer.setPixelRatio( window.devicePixelRatio );
@@ -47401,32 +47413,26 @@
 	  document.body.appendChild( renderer.domElement );
 
 	  scene = new THREE.Scene();
-	  camera = new THREE.PerspectiveCamera( 75, W / H, 0.01, 1000 );
-	  controls = new THREE.OrbitControls( camera, renderer.domElement );
+	  // camera = new THREE.PerspectiveCamera( 75, W / H, 0.01, 1000 );
+	  camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000 );
 	  camera.position.z = 1.26;
-
-
-	  // let v1 = equitri( [-2,0], 1, false );
-	  // let v2 = equitri( [2, 0], 1, true  );
-	  // let v = new Float32Array( v1.concat(v2) );
-	  // let geo = new THREE.BufferGeometry();
-	  // geo.addAttribute( 'position', new THREE.BufferAttribute(v, 2) );
+	  // controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 	  // Setup webcam texture
-	  let videoElement = startWebcam(true);
+	  let videoElement = startWebcam();
 	  texture = new THREE.VideoTexture(videoElement);
 	  texture.minFilter = THREE.LinearFilter;
 	  texture.magFilter = THREE.LinearFilter;
 	  texture.format = THREE.RGBFormat;
 
-	  let geo = meshgeo(0.02);
+	  let geo = meshgeo(2/meshCount);
 	  let mat = new THREE.MeshBasicMaterial({
-	    color: 0xFFFFFF, // JM colors: 0x1424fa, 0xFFFFFF, 0x251e21, 0xfc4d40
-	    wireframe:false,
-	    map:texture
+	    color: COLORS[0],
+	    map: texture
 	  });
-	  let mesh = new THREE.Mesh( geo, mat );
-	  mesh.scale.x = W/H;
+	  mesh = new THREE.Mesh( geo, mat );
+	  // mesh.scale.x = W/H; // only needed for perspective camera
+	  window.mesh = mesh;
 	  scene.add( mesh );
 
 	  // // Test quad with video texture
@@ -47435,6 +47441,37 @@
 	  // var plane = new THREE.Mesh( geometry, material );
 	  // plane.position.z = -0.1;
 	  // scene.add( plane );
+	}
+
+	function updateMeshCount(newMeshCount) {
+	  if (newMeshCount !== undefined) { meshCount = newMeshCount; }
+	  mesh.geometry = meshgeo(2/meshCount);
+	}
+
+
+	function setMeshCount(idx) {
+	  updateMeshCount( MESH_COUNTS[idx] );
+	}
+
+	let meshCountIdx = MESH_COUNT_IDX_DEFAULT;
+	function nextMeshCount(offset = 1) {
+	  meshCountIdx += offset;
+	  meshCountIdx %= MESH_COUNTS.length;
+	  if (meshCountIdx < 0) { meshCountIdx += MESH_COUNTS.length; }
+	  setMeshCount(meshCountIdx);
+	}
+
+
+	function setColor(idx) { 
+	  mesh.material.color = new THREE.Color( COLORS[idx] );
+	}
+
+	let colorIdx = 0;
+	function nextColor(offset = 1) {
+	  colorIdx += offset;
+	  colorIdx %= COLORS.length;
+	  if (colorIdx < 0) { colorIdx += COLORS.length; }
+	  setColor(colorIdx);
 	}
 
 
@@ -47446,15 +47483,57 @@
 	}
 
 
+	// NOTE: Needs THREE.WebGLRenderer with preserveDrawingBuffer:true
+	function saveCanvas() {
+	  let canvas = document.querySelector('canvas');
+	  let link = document.createElement('a');
+	  let timestamp = new Date().toISOString();
+	  link.download = timestamp + '.png';
+	  link.href = canvas.toDataURL();
+	  link.click();
+	}
+
+	function modifiedKey(e) {
+	  // NOTE: meta is Cmd on Mac
+	  return e.ctrlKey || e.altKey || e.metaKey;
+	}
+
+
 	document.addEventListener('keydown', e => {
 	  // console.log(e.key, e.keyCode, e);
-
-	  if (e.key == 'f') { // f .. fullscreen
+	  
+	  if ( !modifiedKey(e) ) return; // Allow only modified keys
+	  
+	  if ( e.code == 'KeyF') { // F .. Fullscreen
 	    if (!document.webkitFullscreenElement) {
 	      document.querySelector('body').webkitRequestFullscreen();
 	    } else { document.webkitExitFullscreen(); }
+	    e.preventDefault();
 	  }
-
+	  
+	  else if (e.code == 'KeyS') { // S .. Save frame
+	    saveCanvas();
+	    e.preventDefault();
+	  }
+	  
+	  else if (e.code == 'Digit1') { setMeshCount(0); }
+	  else if (e.code == 'Digit2') { setMeshCount(1); }
+	  else if (e.code == 'Digit3') { setMeshCount(2); }
+	  else if (e.code == 'Digit4') { setMeshCount(3); }
+	  else if (e.code == 'Digit5') { setMeshCount(4); }
+	  else if (e.code == 'Digit6') { setMeshCount(5); }
+	  else if (e.code == 'Digit7') { setMeshCount(6); }
+	  else if (e.code == 'Digit8') { setMeshCount(7); }
+	  else if (e.code == 'Digit0') { setMeshCount(MESH_COUNT_IDX_DEFAULT); }
+	  
+	  else if (e.code == 'ArrowRight') { nextColor(); }
+	  else if (e.code == 'ArrowLeft')  { nextColor(-1); }
+	  
+	  else if (e.code == 'ArrowUp')   { nextMeshCount(); }
+	  else if (e.code == 'ArrowDown') { nextMeshCount(-1); }
+	  
+	  if (e.code.startsWith('Digit') || e.code.startsWith('Arrow')) { e.preventDefault(); }
+	  
 	});
 
 }());

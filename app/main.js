@@ -4,13 +4,14 @@ import '../node_modules/three/examples/js/controls/OrbitControls.js';
 
 const W = 1280;
 const H = 720;
-const ratio = 0.25; // For camera resolution
+const CAPTURE_RATIO = 0.25; // For capture resolution
+const MODIFIED_HOTKEYS = true;
 
 
 const caps = { // Camera Capabilities
   video: {
-    width: W*ratio,
-    height: H*ratio,
+    width: W * CAPTURE_RATIO,
+    height: H * CAPTURE_RATIO,
   }
 };
 
@@ -107,7 +108,8 @@ function setup() {
 
   renderer = new THREE.WebGLRenderer({
     antialias: true,
-    alpha: true
+    alpha: true,
+    preserveDrawingBuffer: true
   });
   renderer.setSize( W, H );
   renderer.setPixelRatio( window.devicePixelRatio );
@@ -160,13 +162,37 @@ function loop(time) { // eslint-disable-line no-unused-vars
 }
 
 
+// NOTE: Needs THREE.WebGLRenderer with preserveDrawingBuffer:true
+function saveCanvas() {
+  let canvas = document.querySelector('canvas');
+  let link = document.createElement('a');
+  let timestamp = new Date().toISOString();
+  link.download = timestamp + '.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+function modifiedKey(e) {
+  // NOTE: meta is Cmd on Mac
+  return e.ctrlKey || e.altKey || e.metaKey;
+}
+
+
 document.addEventListener('keydown', e => {
   // console.log(e.key, e.keyCode, e);
-
-  if (e.key == 'f') { // f .. fullscreen
+  
+  if ( MODIFIED_HOTKEYS && !modifiedKey(e) ) return; // Allow only modified keys
+  
+  if ( e.code == 'KeyF') { // F .. Fullscreen
     if (!document.webkitFullscreenElement) {
       document.querySelector('body').webkitRequestFullscreen();
     } else { document.webkitExitFullscreen(); }
+    e.preventDefault();
+  }
+  
+  else if (e.code == 'KeyS') { // S .. Save frame
+    saveCanvas();
+    e.preventDefault();
   }
 
 });

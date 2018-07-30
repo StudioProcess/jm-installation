@@ -253,5 +253,4 @@ document.addEventListener('keydown', e => {
   
   
   if (e.code.startsWith('Digit') || e.code.startsWith('Arrow')) { e.preventDefault(); }
-  
 });

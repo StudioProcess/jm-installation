@@ -25,3 +25,7 @@ video {
   transform-origin: middle;
   transform: scale(-1, 1);
 }
+
+@media (display-mode: fullscreen) {
+  body { cursor: none; }
+}
